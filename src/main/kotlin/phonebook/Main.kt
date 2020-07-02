@@ -11,16 +11,30 @@ fun run() {
     val targetNames = readFile("src/main/kotlin/phonebook/test_samples/find.txt")
     val namesFull = phonesAndNames.map { v -> v.substring(v.indexOf(' ') + 1) }
 
-    run(namesFull, targetNames, ::linearSearch, "linearSearch")
-    run(namesFull.sorted(), targetNames, ::jumpSearch, "JumpSearch")
+    searchTest(namesFull, targetNames, ::linearSearch, "linear search")
+    sortAndSearchTest(namesFull, targetNames, ::bubbleSort, ::jumpSearch, "bubble sort", "jump search")
 }
 
-fun run(phonesAndNames:List<String>, names:List<String>, searchAlg: ( List<String>, String) -> Int, algName: String){
+fun searchTest(data:List<String>, targetData:List<String>, searchAlg: (List<String>, String) -> Int, algName: String){
     println("Start searching ($algName)...")
-    val (resultsFound, elapsedTimeMillis) = testSearchPerfAndGetTimeAndResultsFound(phonesAndNames, names, searchAlg)
+    val (resultsFound, elapsedTimeMillis) = testSearchPerfAndGetTimeAndResultsFound(data, targetData, searchAlg)
 
     val (min, sec, ms) = millisToMinSecMillis(elapsedTimeMillis)
-    println(createOutputStr(resultsFound, names.size.toLong(), min, sec, ms))
+    println(createOutputStr(resultsFound, targetData.size.toLong(), min, sec, ms))
+}
+
+fun sortAndSearchTest(data: List<String>, targetData: List<String>, sortAlg: (MutableList<String>) -> (Unit), searchAlg: (List<String>, String) -> Int, sortAlgName:String, searchAlgName: String){
+    println("Start searching ($sortAlgName + $searchAlgName)...")
+    val mutableData = data.toMutableList()
+    val sortTimeMillis = testSortPerf(mutableData, sortAlg)
+    val (resultsFound, searchTimeMillis) = testSearchPerfAndGetTimeAndResultsFound(mutableData, targetData, searchAlg)
+
+    val (min, sec, ms) = millisToMinSecMillis(sortTimeMillis + searchTimeMillis)
+    val (sortMin, sortSec, sortMs) = millisToMinSecMillis(sortTimeMillis)
+    val (searchMin, searchSec, searchMs) = millisToMinSecMillis(searchTimeMillis)
+    println(createOutputStr(resultsFound, targetData.size.toLong(), min, sec, ms))
+    println("Sorting time: $sortMin min. $sortSec sec. $sortMs ms.")
+    println("Searching time: $searchMin min. $searchSec sec. $searchMs.")
 }
 
 fun testSearchPerfAndGetTimeAndResultsFound(data: List<String>, search: List<String>, searchAlg: (List<String>, String) -> Int ): LongArray {
@@ -31,6 +45,10 @@ fun testSearchPerfAndGetTimeAndResultsFound(data: List<String>, search: List<Str
         }
     }
     return longArrayOf(resultsFound, elapsedTimeMillis)
+}
+
+fun testSortPerf(data: MutableList<String>, sortAlg: (MutableList<String>) -> (Unit)): Long {
+    return measureTimeMillis { sortAlg(data) }
 }
 
 fun createOutputStr(resultsFound: Long, results: Long, min: Long, sec: Long, ms: Long): String {
