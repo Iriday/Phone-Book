@@ -8,10 +8,16 @@ fun main() {
 
 fun run() {
     val phonesAndNames = readFile("src/main/kotlin/phonebook/test_samples/directory.txt")
-    val names = readFile("src/main/kotlin/phonebook/test_samples/find.txt")
+    val targetNames = readFile("src/main/kotlin/phonebook/test_samples/find.txt")
+    val namesFull = phonesAndNames.map { v -> v.substring(v.indexOf(' ') + 1) }
 
-    println("Start searching...")
-    val (resultsFound, elapsedTimeMillis) = testSearchPerfAndGetTimeAndResultsFound(phonesAndNames, names, ::linearSearch)
+    run(phonesAndNames, targetNames, ::linearSearch, "linearSearch")
+    run(namesFull.sorted(), targetNames, ::jumpSearch, "JumpSearch")
+}
+
+fun run(phonesAndNames:List<String>, names:List<String>, searchAlg: ( List<String>, String) -> Int, algName: String){
+    println("Start searching ($algName)...")
+    val (resultsFound, elapsedTimeMillis) = testSearchPerfAndGetTimeAndResultsFound(phonesAndNames, names, searchAlg)
 
     val (min, sec, ms) = millisToMinSecMillis(elapsedTimeMillis)
     println(createOutputStr(resultsFound, names.size.toLong(), min, sec, ms))
