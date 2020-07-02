@@ -3,16 +3,16 @@ package phonebook
 import kotlin.math.min
 import kotlin.math.sqrt
 
-fun linearSearch(data: List<String>, target: String): Int {
+fun <T> linearSearch(data: List<T>, target: T): Int {
     for ((i, str) in data.withIndex()) {
-        if (str.contains(target)) {
+        if (str == target) {
             return i
         }
     }
     return -1
 }
 
-fun  linearSearchBackward(data: List<String>, target: String, leftIndexExcl: Int = 0, rightIndexIncl: Int = data.lastIndex): Int {
+fun <T> linearSearchBackward(data: List<T>, target: T, leftIndexExcl: Int = -1, rightIndexIncl: Int = data.lastIndex): Int {
     for (i in rightIndexIncl.downTo(leftIndexExcl + 1)) {
         if (data[i] == target) {
             return i

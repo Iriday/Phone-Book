@@ -11,7 +11,7 @@ fun run() {
     val targetNames = readFile("src/main/kotlin/phonebook/test_samples/find.txt")
     val namesFull = phonesAndNames.map { v -> v.substring(v.indexOf(' ') + 1) }
 
-    run(phonesAndNames, targetNames, ::linearSearch, "linearSearch")
+    run(namesFull, targetNames, ::linearSearch, "linearSearch")
     run(namesFull.sorted(), targetNames, ::jumpSearch, "JumpSearch")
 }
 
