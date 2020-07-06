@@ -1,5 +1,6 @@
 package phonebook
 
+import kotlin.concurrent.thread
 import kotlin.system.measureTimeMillis
 
 fun main() {
@@ -11,30 +12,46 @@ fun run() {
     val targetNames = readFile("src/main/kotlin/phonebook/test_samples/find.txt")
     val namesFull = phonesAndNames.map { v -> v.substring(v.indexOf(' ') + 1) }
 
-    searchTest(namesFull, targetNames, ::linearSearch, "linear search")
-    sortAndSearchTest(namesFull, targetNames, ::bubbleSort, ::jumpSearch, "bubble sort", "jump search")
+    val time = searchTest(namesFull, targetNames, ::linearSearch, "linear search")
+    println()
+    sortAndSearchTest(namesFull, targetNames, ::bubbleSort, ::jumpSearch, "bubble sort", "jump search", time, ::linearSearch, "linear search")
 }
 
-fun searchTest(data:List<String>, targetData:List<String>, searchAlg: (List<String>, String) -> Int, algName: String){
+fun searchTest(data:List<String>, targetData:List<String>, searchAlg: (List<String>, String) -> Int, algName: String): Long{
     println("Start searching ($algName)...")
     val (resultsFound, elapsedTimeMillis) = testSearchPerfAndGetTimeAndResultsFound(data, targetData, searchAlg)
 
     val (min, sec, ms) = millisToMinSecMillis(elapsedTimeMillis)
     println(createOutputStr(resultsFound, targetData.size.toLong(), min, sec, ms))
+    return elapsedTimeMillis
 }
 
-fun sortAndSearchTest(data: List<String>, targetData: List<String>, sortAlg: (MutableList<String>) -> (Unit), searchAlg: (List<String>, String) -> Int, sortAlgName:String, searchAlgName: String){
-    println("Start searching ($sortAlgName + $searchAlgName)...")
+fun sortAndSearchTest(data: List<String>, targetData: List<String>, sortAlg: (MutableList<String>) -> (Unit), searchAlg: (List<String>, String) -> Int, sortAlgName:String, searchAlgName: String, fallbackSearchAlgTime: Long, fallbackSearchAlg: (List<String>, String) -> Int, fallbackSearchAlgName: String){
     val mutableData = data.toMutableList()
-    val sortTimeMillis = testSortPerf(mutableData, sortAlg)
-    val (resultsFound, searchTimeMillis) = testSearchPerfAndGetTimeAndResultsFound(mutableData, targetData, searchAlg)
+    var sortTimeMillis = 0L
+    var fallback = false
+
+    println("Start searching ($sortAlgName + $searchAlgName)...")
+    val startTime = System.currentTimeMillis()
+    val thread = thread(start = true) { sortTimeMillis = testSortPerf(mutableData, sortAlg) }
+    thread.join(fallbackSearchAlgTime * 10)
+    val endTime = System.currentTimeMillis()
+    if (thread.isAlive) {
+        thread.stop()
+        fallback = true
+        sortTimeMillis = endTime - startTime
+    }
+
+    val (resultsFound, searchTimeMillis) =
+        if (!fallback) testSearchPerfAndGetTimeAndResultsFound(mutableData, targetData, searchAlg)
+        else testSearchPerfAndGetTimeAndResultsFound(data, targetData, fallbackSearchAlg)
 
     val (min, sec, ms) = millisToMinSecMillis(sortTimeMillis + searchTimeMillis)
     val (sortMin, sortSec, sortMs) = millisToMinSecMillis(sortTimeMillis)
     val (searchMin, searchSec, searchMs) = millisToMinSecMillis(searchTimeMillis)
     println(createOutputStr(resultsFound, targetData.size.toLong(), min, sec, ms))
-    println("Sorting time: $sortMin min. $sortSec sec. $sortMs ms.")
-    println("Searching time: $searchMin min. $searchSec sec. $searchMs.")
+    println("Sorting time: $sortMin min. $sortSec sec. $sortMs ms." + if (fallback) " - STOPPED, moved to $fallbackSearchAlgName" else "")
+    println("Searching time: $searchMin min. $searchSec sec. $searchMs ms.")
 }
 
 fun testSearchPerfAndGetTimeAndResultsFound(data: List<String>, search: List<String>, searchAlg: (List<String>, String) -> Int ): LongArray {
