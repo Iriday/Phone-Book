@@ -15,6 +15,8 @@ fun run() {
     val time = searchTest(namesFull, targetNames, ::linearSearch, "linear search")
     println()
     sortAndSearchTest(namesFull, targetNames, ::bubbleSort, ::jumpSearch, "bubble sort", "jump search", time, ::linearSearch, "linear search")
+    println()
+    searchTest(namesFull.sorted(), targetNames, ::binarySearch, "binary search")
 }
 
 fun searchTest(data:List<String>, targetData:List<String>, searchAlg: (List<String>, String) -> Int, algName: String): Long{
