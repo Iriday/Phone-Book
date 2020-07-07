@@ -17,6 +17,8 @@ fun run() {
     sortAndSearchTest(namesFull, targetNames, ::bubbleSort, ::jumpSearch, "bubble sort", "jump search", time, ::linearSearch, "linear search")
     println()
     sortAndSearchTest(namesFull, targetNames, ::quickSort, ::binarySearch, "quick sort", "binary search", time, ::linearSearch, "linear search")
+    println()
+    hashTableCreationAndSearchTest(phonesAndNames, targetNames)
 }
 
 fun searchTest(data:List<String>, targetData:List<String>, searchAlg: (List<String>, String) -> Int, algName: String): Long{
@@ -53,6 +55,30 @@ fun sortAndSearchTest(data: List<String>, targetData: List<String>, sortAlg: (Mu
     val (searchMin, searchSec, searchMs) = millisToMinSecMillis(searchTimeMillis)
     println(createOutputStr(resultsFound, targetData.size.toLong(), min, sec, ms))
     println("Sorting time: $sortMin min. $sortSec sec. $sortMs ms." + if (fallback) " - STOPPED, moved to $fallbackSearchAlgName" else "")
+    println("Searching time: $searchMin min. $searchSec sec. $searchMs ms.")
+}
+
+fun hashTableCreationAndSearchTest(phonesAndNames: List<String>, targetData: List<String>) {
+    val data = HashMap<String, String>()
+    println("Start searching (hash table)...")
+    val creationTime = measureTimeMillis {
+        for (line in phonesAndNames) {
+            val sepIndex = line.indexOf(' ')
+            data[line.substring(sepIndex + 1)] = line.substring(0, sepIndex)
+        }
+    }
+    var resultsFound = 0L
+    val searchTime = measureTimeMillis {
+        for (s in targetData) {
+            resultsFound += if (data[s] != null) 1 else 0
+        }
+    }
+
+    val (min, sec, ms) = millisToMinSecMillis(creationTime + searchTime)
+    val (creationMin, creationSec, creationMs) = millisToMinSecMillis(creationTime)
+    val (searchMin, searchSec, searchMs) = millisToMinSecMillis(searchTime)
+    println(createOutputStr(resultsFound, targetData.size.toLong(), min, sec, ms))
+    println("Creating time: $creationMin min. $creationSec sec. $creationMs ms.")
     println("Searching time: $searchMin min. $searchSec sec. $searchMs ms.")
 }
 
