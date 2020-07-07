@@ -16,7 +16,7 @@ fun run() {
     println()
     sortAndSearchTest(namesFull, targetNames, ::bubbleSort, ::jumpSearch, "bubble sort", "jump search", time, ::linearSearch, "linear search")
     println()
-    searchTest(namesFull.sorted(), targetNames, ::binarySearch, "binary search")
+    sortAndSearchTest(namesFull, targetNames, ::quickSort, ::binarySearch, "quick sort", "binary search", time, ::linearSearch, "linear search")
 }
 
 fun searchTest(data:List<String>, targetData:List<String>, searchAlg: (List<String>, String) -> Int, algName: String): Long{
